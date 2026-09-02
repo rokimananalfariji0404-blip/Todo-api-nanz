@@ -8,12 +8,7 @@ const options = {
       version: "1.0.0",
       description: "Dokumentasi API Todo List — dibangun bertahap dari seri artikel backend Node.js",
     },
-    // UBAH BAGIAN SERVERS DI BAWAH INI:
     servers: [
-      {
-        url: "/",
-        description: "Current Server (Auto Detect / Vercel)",
-      },
       {
         url: "http://localhost:3000",
         description: "Local development server",
