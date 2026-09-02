@@ -23,7 +23,6 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use("/api/auth", authRoutes);
 app.use("/api/todos", todoRoutes);
 app.use("/api/stats", statsRoutes);
-app.get('/favicon.ico', (req, res) => res.status(204).end());
 app.use(notFound);
 app.use(errorHandler);
  
