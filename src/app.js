@@ -23,6 +23,7 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use("/api/auth", authRoutes);
 app.use("/api/todos", todoRoutes);
 app.use("/api/stats", statsRoutes);
+ 
 app.use(notFound);
 app.use(errorHandler);
  
