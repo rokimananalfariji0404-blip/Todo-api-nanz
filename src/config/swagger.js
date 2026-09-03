@@ -11,8 +11,12 @@ const options = {
     },
     servers: [
       {
-        url: "/", // Menggunakan "/" agar otomatis menyesuaikan Domain Localhost maupun Vercel
-        description: "Current environment server",
+        url: "/",
+        description: "Current Server (Auto Detect / Vercel)",
+      },
+      {
+        url: "http://localhost:3000",
+        description: "Local development server",
       },
     ],
     components: {
