@@ -18,11 +18,22 @@ app.get("/", (req, res) => {
   res.json({ message: "Todo API is running" });
 });
 
-// URL CDN untuk CSS Swagger UI agar tidak blank di Vercel
+// URL CDN untuk CSS dan JS Swagger UI agar tidak blank di Vercel
 const CSS_URL = "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui.min.css";
+const JS_URL = [
+  "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui-bundle.js",
+  "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui-standalone-preset.js"
+];
 
 // Halaman dokumentasi interaktif tersedia di /api-docs
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, { customCssUrl: CSS_URL }));
+app.use(
+  "/api-docs",
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpec, {
+    customCssUrl: CSS_URL,
+    customJs: JS_URL,
+  })
+);
 
 app.use("/api/auth", authRoutes);
 app.use("/api/todos", todoRoutes);
