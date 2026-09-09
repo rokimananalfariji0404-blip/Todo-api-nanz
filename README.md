@@ -162,3 +162,14 @@ Anda bebas untuk:
 - Mendistribusikan ulang project
 
 Dengan syarat tetap menyertakan copyright dan lisensi asli.
+
+## Akses API Key
+
+Untuk mengakses endpoint statistik (`/api/stats/summary`), Anda wajib menyertakan **x-api-key** pada Header request:
+
+- **Header Key**: `x-api-key`
+- **Header Value**: `<API_KEY_ANDA>` (sesuai dengan yang dikonfigurasi di file `.env`)
+
+Contoh Penggunaan (cURL):
+```bash
+curl -X GET "http://localhost:3000/api/stats/summary" -H "x-api-key: rahasia123"

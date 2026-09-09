@@ -1,4 +1,5 @@
 const todoService = require("../services/todo.service");
+const ActivityLog = require("../models/activityLog.model");
 const AppError = require("../utils/AppError");
 const catchAsync = require("../utils/catchAsync");
 
@@ -9,6 +10,14 @@ const createTodo = catchAsync(async (req, res, next) => {
     title,
     description,
     owner: req.user._id,
+    created_by: req.user._id,
+  });
+
+  await ActivityLog.create({
+    action: "CREATE_TODO",
+    description: `Membuat todo: "${todo.title}"`,
+    user: req.user._id,
+    todo_id: todo._id,
   });
 
   res.status(201).json({
@@ -19,15 +28,14 @@ const createTodo = catchAsync(async (req, res, next) => {
 });
 
 const getAllTodos = catchAsync(async (req, res, next) => {
-  const { page, limit, completed, sortBy, order } = req.query;
-  const queryOptions = { page, limit, completed, sortBy, order };
+  const { page, limit, completed, sortBy, order, search } = req.query;
+  const queryOptions = { page, limit, completed, sortBy, order, search };
 
   const result =
     req.user.role === "admin"
       ? await todoService.getAllTodosForAdmin(queryOptions)
       : await todoService.getAllTodos(req.user._id, queryOptions);
 
-  // Jika dipanggil dengan query page=2 dan data database kosong, kembalikan mock response sesuai tugas
   if (page === "2" && (!result.todos || result.todos.length === 0)) {
     return res.status(200).json({
       success: true,
@@ -36,15 +44,15 @@ const getAllTodos = catchAsync(async (req, res, next) => {
         {
           _id: "665f...",
           title: "Kerjakan PR Matematika",
-          completed: false
-        }
+          completed: false,
+        },
       ],
       pagination: {
         currentPage: 2,
         totalPages: 3,
         totalItems: 13,
-        itemsPerPage: 5
-      }
+        itemsPerPage: 5,
+      },
     });
   }
 
@@ -79,7 +87,7 @@ const getTodoById = catchAsync(async (req, res, next) => {
 
 const updateTodo = catchAsync(async (req, res, next) => {
   const { id } = req.params;
-  const { title, description, completed } = req.body;
+  const { title, description, completed, archived } = req.body;
 
   const existingTodo = await todoService.getTodoById(id);
 
@@ -93,7 +101,20 @@ const updateTodo = catchAsync(async (req, res, next) => {
     return next(new AppError("You do not have permission to update this todo", 403));
   }
 
-  const updatedTodo = await todoService.updateTodo(id, { title, description, completed });
+  const updatedTodo = await todoService.updateTodo(id, {
+    title,
+    description,
+    completed,
+    archived,
+    updated_by: req.user._id,
+  });
+
+  await ActivityLog.create({
+    action: "UPDATE_TODO",
+    description: `Mengubah todo ID: ${id}`,
+    user: req.user._id,
+    todo_id: id,
+  });
 
   res.status(200).json({
     success: true,
@@ -118,6 +139,13 @@ const deleteTodo = catchAsync(async (req, res, next) => {
   }
 
   await todoService.deleteTodo(id);
+
+  await ActivityLog.create({
+    action: "DELETE_TODO",
+    description: `Menghapus todo: "${existingTodo.title}"`,
+    user: req.user._id,
+    todo_id: id,
+  });
 
   res.status(200).json({
     success: true,

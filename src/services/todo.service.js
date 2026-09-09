@@ -5,18 +5,23 @@ async function createTodo(data) {
     title: data.title,
     description: data.description,
     owner: data.owner,
+    created_by: data.created_by, // Menambahkan created_by agar tidak error
   });
   return await todo.save();
 }
 
-async function getAllTodos(ownerId, queryOptions) {
-  const { page = 1, limit = 10, completed, sortBy = "createdAt", order = "desc" } = queryOptions;
+async function getAllTodos(ownerId, queryOptions = {}) {
+  const { page = 1, limit = 10, completed, sortBy = "created_at", order = "desc", search } = queryOptions;
 
   const filter = { owner: ownerId };
 
-  // Filter berdasarkan status completed, hanya jika parameter dikirim
   if (completed !== undefined) {
-    filter.completed = completed === "true";
+    filter.completed = completed === "true" || completed === true;
+  }
+
+  // Menambahkan fitur pencarian berdasarkan title
+  if (search) {
+    filter.title = { $regex: search, $options: "i" };
   }
 
   const sortDirection = order === "asc" ? 1 : -1;
@@ -43,13 +48,17 @@ async function getAllTodos(ownerId, queryOptions) {
   };
 }
 
-async function getAllTodosForAdmin(queryOptions) {
-  const { page = 1, limit = 10, completed, sortBy = "createdAt", order = "desc" } = queryOptions;
+async function getAllTodosForAdmin(queryOptions = {}) {
+  const { page = 1, limit = 10, completed, sortBy = "created_at", order = "desc", search } = queryOptions;
 
   const filter = {};
 
   if (completed !== undefined) {
-    filter.completed = completed === "true";
+    filter.completed = completed === "true" || completed === true;
+  }
+
+  if (search) {
+    filter.title = { $regex: search, $options: "i" };
   }
 
   const sortDirection = order === "asc" ? 1 : -1;
@@ -82,13 +91,16 @@ async function getTodoById(id) {
 }
 
 async function updateTodo(id, data) {
+  const updateFields = {};
+  if (data.title !== undefined) updateFields.title = data.title;
+  if (data.description !== undefined) updateFields.description = data.description;
+  if (data.completed !== undefined) updateFields.completed = data.completed;
+  if (data.archived !== undefined) updateFields.archived = data.archived;
+  if (data.updated_by !== undefined) updateFields.updated_by = data.updated_by;
+
   return await Todo.findByIdAndUpdate(
     id,
-    {
-      title: data.title,
-      description: data.description,
-      completed: data.completed,
-    },
+    updateFields,
     { new: true, runValidators: true }
   );
 }
