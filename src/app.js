@@ -19,11 +19,21 @@ app.get("/", (req, res) => {
   res.json({ message: "Todo API is running" });
 });
 
-// Halaman dokumentasi interaktif (Menggunakan file lokal bawaan module agar tidak timeout di Vercel)
+// URL CDN jsDelivr yang stabil dan kompatibel dengan Vercel
+const CSS_URL = "https://cdn.jsdelivr.net/npm/swagger-ui-dist@4.15.5/swagger-ui.css";
+const JS_URL = [
+  "https://cdn.jsdelivr.net/npm/swagger-ui-dist@4.15.5/swagger-ui-bundle.js",
+  "https://cdn.jsdelivr.net/npm/swagger-ui-dist@4.15.5/swagger-ui-standalone-preset.js",
+];
+
+// Halaman dokumentasi interaktif
 app.use(
   "/api-docs",
   swaggerUi.serve,
-  swaggerUi.setup(swaggerSpec)
+  swaggerUi.setup(swaggerSpec, {
+    customCssUrl: CSS_URL,
+    customJs: JS_URL,
+  })
 );
 
 app.use("/api/auth", authRoutes);
