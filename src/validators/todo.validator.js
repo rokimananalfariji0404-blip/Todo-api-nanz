@@ -13,6 +13,12 @@ const createTodoRules = [
     .trim()
     .isLength({ max: 500 })
     .withMessage("Description must not exceed 500 characters"),
+
+  // TAMBAHAN: Validasi category saat create todo
+  body("category")
+    .optional()
+    .isMongoId()
+    .withMessage("Invalid category ID format"),
 ];
 
 const updateTodoRules = [
@@ -34,6 +40,12 @@ const updateTodoRules = [
     .optional()
     .isBoolean()
     .withMessage("Completed must be true or false"),
+
+  // TAMBAHAN: Validasi category saat update todo
+  body("category")
+    .optional()
+    .isMongoId()
+    .withMessage("Invalid category ID format"),
 ];
 
 const getTodoByIdRules = [param("id").isMongoId().withMessage("Invalid todo ID format")];

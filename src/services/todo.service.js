@@ -4,8 +4,11 @@ async function createTodo(data) {
   const todo = new Todo({
     title: data.title,
     description: data.description,
+    completed: data.completed,
+    category: data.category, // PERBAIKAN 1: Menangkap category saat create
     owner: data.owner,
-    created_by: data.created_by, // Menambahkan created_by agar tidak error
+    created_by: data.created_by,
+    updated_by: data.updated_by || data.created_by, // PERBAIKAN 2: updated_by langsung diisi saat create
   });
   return await todo.save();
 }
@@ -31,7 +34,8 @@ async function getAllTodos(ownerId, queryOptions = {}) {
     Todo.find(filter)
       .sort({ [sortBy]: sortDirection })
       .skip(skip)
-      .limit(Number(limit)),
+      .limit(Number(limit))
+      .populate("category", "name"), // Opsional agar data kategori ikut tampil saat GET
     Todo.countDocuments(filter),
   ]);
 
@@ -69,7 +73,8 @@ async function getAllTodosForAdmin(queryOptions = {}) {
       .sort({ [sortBy]: sortDirection })
       .skip(skip)
       .limit(Number(limit))
-      .populate("owner", "name email"),
+      .populate("owner", "name email")
+      .populate("category", "name"), // Opsional agar kategori tampil di admin
     Todo.countDocuments(filter),
   ]);
 
@@ -87,7 +92,7 @@ async function getAllTodosForAdmin(queryOptions = {}) {
 }
 
 async function getTodoById(id) {
-  return await Todo.findById(id);
+  return await Todo.findById(id).populate("category", "name");
 }
 
 async function updateTodo(id, data) {
@@ -96,13 +101,14 @@ async function updateTodo(id, data) {
   if (data.description !== undefined) updateFields.description = data.description;
   if (data.completed !== undefined) updateFields.completed = data.completed;
   if (data.archived !== undefined) updateFields.archived = data.archived;
+  if (data.category !== undefined) updateFields.category = data.category; // PERBAIKAN 3: Menangkap category saat update
   if (data.updated_by !== undefined) updateFields.updated_by = data.updated_by;
 
   return await Todo.findByIdAndUpdate(
     id,
     updateFields,
     { new: true, runValidators: true }
-  );
+  ).populate("category", "name");
 }
 
 async function deleteTodo(id) {

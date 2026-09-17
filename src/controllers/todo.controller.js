@@ -4,20 +4,30 @@ const AppError = require("../utils/AppError");
 const catchAsync = require("../utils/catchAsync");
 
 const createTodo = catchAsync(async (req, res, next) => {
-  const { title, description } = req.body;
+  // 1. Ambil 'category' juga dari req.body
+  const { title, description, category } = req.body;
 
   const todo = await todoService.createTodo({
     title,
     description,
+    category, // Menyimpan kategori saat create
     owner: req.user._id,
     created_by: req.user._id,
+    updated_by: req.user._id,
   });
 
+  // 2. Tambahkan snapshot pada activity log sesuai instruksi
   await ActivityLog.create({
     action: "CREATE_TODO",
-    description: `Membuat todo: "${todo.title}"`,
-    user: req.user._id,
     todo_id: todo._id,
+    user: req.user._id, // Diubah dari user_id ke user
+    description: `Membuat todo: "${todo.title}"`, // Menambahkan deskripsi wajib log
+    snapshot: {
+      title: todo.title,
+      description: todo.description,
+      category: todo.category,
+      completed: todo.completed,
+    },
   });
 
   res.status(201).json({
@@ -87,7 +97,8 @@ const getTodoById = catchAsync(async (req, res, next) => {
 
 const updateTodo = catchAsync(async (req, res, next) => {
   const { id } = req.params;
-  const { title, description, completed, archived } = req.body;
+  // 1. Ambil 'category' juga dari req.body saat update
+  const { title, description, completed, archived, category } = req.body;
 
   const existingTodo = await todoService.getTodoById(id);
 
@@ -106,14 +117,23 @@ const updateTodo = catchAsync(async (req, res, next) => {
     description,
     completed,
     archived,
+    category, // Mengirim data category ke service update
     updated_by: req.user._id,
   });
 
+  // 2. Sertakan snapshot pada log update
   await ActivityLog.create({
     action: "UPDATE_TODO",
-    description: `Mengubah todo ID: ${id}`,
-    user: req.user._id,
     todo_id: id,
+    user: req.user._id, // Diubah dari user_id ke user
+    description: `Mengubah todo: "${updatedTodo.title}"`, // Menambahkan deskripsi wajib log
+    snapshot: {
+      title: updatedTodo.title,
+      description: updatedTodo.description,
+      category: updatedTodo.category,
+      completed: updatedTodo.completed,
+      archived: updatedTodo.archived,
+    },
   });
 
   res.status(200).json({
@@ -140,11 +160,18 @@ const deleteTodo = catchAsync(async (req, res, next) => {
 
   await todoService.deleteTodo(id);
 
+  // 3. Sertakan snapshot pada log delete (sangat berguna agar data tetap ada walau todo dihapus)
   await ActivityLog.create({
     action: "DELETE_TODO",
-    description: `Menghapus todo: "${existingTodo.title}"`,
-    user: req.user._id,
     todo_id: id,
+    user: req.user._id, // Diubah dari user_id ke user
+    description: `Menghapus todo: "${existingTodo.title}"`, // Menambahkan deskripsi wajib log
+    snapshot: {
+      title: existingTodo.title,
+      description: existingTodo.description,
+      category: existingTodo.category,
+      completed: existingTodo.completed,
+    },
   });
 
   res.status(200).json({
