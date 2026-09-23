@@ -1,3 +1,4 @@
+const path = require("path"); // 1. Impor modul path
 const swaggerJSDoc = require("swagger-jsdoc");
 
 const options = {
@@ -60,7 +61,8 @@ const options = {
       },
     },
   },
-  apis: ["./src/routes/*.js"],
+  // 2. Gunakan path.join agar aman di Vercel
+  apis: [path.join(__dirname, "../routes/*.js")],
 };
 
 const swaggerSpec = swaggerJSDoc(options);
