@@ -1,4 +1,4 @@
-const path = require("path"); // 1. Impor modul path
+const path = require("path");
 const swaggerJSDoc = require("swagger-jsdoc");
 
 const options = {
@@ -61,8 +61,14 @@ const options = {
       },
     },
   },
-  // 2. Gunakan path.join agar aman di Vercel
-  apis: [path.join(__dirname, "../routes/*.js")],
+  // Mengarahkan langsung ke file-file rute di dalam folder src/routes/
+ apis: [
+    path.join(process.cwd(), "src/routes/todo.routes.js"),
+    path.join(process.cwd(), "src/routes/auth.routes.js"),
+    path.join(process.cwd(), "src/routes/category.routes.js"),
+    path.join(process.cwd(), "src/routes/stats.routes.js"),
+    path.join(process.cwd(), "src/routes/activityLog.routes.js"),
+  ],
 };
 
 const swaggerSpec = swaggerJSDoc(options);
