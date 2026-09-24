@@ -1,16 +1,34 @@
 const Todo = require("../models/todo.model");
+const Category = require("../models/category.model"); // 1. Import model Category untuk pengecekan
+
+// Helper untuk validasi keberadaan kategori di database
+async function validateCategory(categoryId) {
+  if (!categoryId) return;
+  const categoryExists = await Category.findById(categoryId);
+  if (!categoryExists) {
+    const error = new Error("Category not found or invalid");
+    error.statusCode = 404; // Sesuai permintaan revisi: tolak jika tidak valid/tidak ada
+    throw error;
+  }
+}
 
 async function createTodo(data) {
+  // 2. Validasi category sebelum disimpan
+  await validateCategory(data.category);
+
   const todo = new Todo({
     title: data.title,
     description: data.description,
     completed: data.completed,
-    category: data.category, // PERBAIKAN 1: Menangkap category saat create
+    category: data.category,
     owner: data.owner,
     created_by: data.created_by,
-    updated_by: data.updated_by || data.created_by, // PERBAIKAN 2: updated_by langsung diisi saat create
+    updated_by: data.updated_by || data.created_by,
   });
-  return await todo.save();
+  
+  const savedTodo = await todo.save();
+  // Return dengan populasinya agar langsung tampil
+  return await Todo.findById(savedTodo._id).populate("category", "name");
 }
 
 async function getAllTodos(ownerId, queryOptions = {}) {
@@ -22,7 +40,6 @@ async function getAllTodos(ownerId, queryOptions = {}) {
     filter.completed = completed === "true" || completed === true;
   }
 
-  // Menambahkan fitur pencarian berdasarkan title
   if (search) {
     filter.title = { $regex: search, $options: "i" };
   }
@@ -35,7 +52,7 @@ async function getAllTodos(ownerId, queryOptions = {}) {
       .sort({ [sortBy]: sortDirection })
       .skip(skip)
       .limit(Number(limit))
-      .populate("category", "name"), // Opsional agar data kategori ikut tampil saat GET
+      .populate("category", "name"), // Memastikan category ikut tampil saat GET
     Todo.countDocuments(filter),
   ]);
 
@@ -74,7 +91,7 @@ async function getAllTodosForAdmin(queryOptions = {}) {
       .skip(skip)
       .limit(Number(limit))
       .populate("owner", "name email")
-      .populate("category", "name"), // Opsional agar kategori tampil di admin
+      .populate("category", "name"),
     Todo.countDocuments(filter),
   ]);
 
@@ -96,12 +113,17 @@ async function getTodoById(id) {
 }
 
 async function updateTodo(id, data) {
+  // 3. Validasi category jika disertakan dalam update (PUT)
+  if (data.category !== undefined) {
+    await validateCategory(data.category);
+  }
+
   const updateFields = {};
   if (data.title !== undefined) updateFields.title = data.title;
   if (data.description !== undefined) updateFields.description = data.description;
   if (data.completed !== undefined) updateFields.completed = data.completed;
   if (data.archived !== undefined) updateFields.archived = data.archived;
-  if (data.category !== undefined) updateFields.category = data.category; // PERBAIKAN 3: Menangkap category saat update
+  if (data.category !== undefined) updateFields.category = data.category;
   if (data.updated_by !== undefined) updateFields.updated_by = data.updated_by;
 
   return await Todo.findByIdAndUpdate(

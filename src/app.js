@@ -19,22 +19,48 @@ app.get("/", (req, res) => {
   res.json({ message: "Todo API is running" });
 });
 
-// URL CDN untuk CSS dan JS Swagger UI agar tidak blank di Vercel
 const CSS_URL = "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui.min.css";
 const JS_URL = [
   "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui-bundle.js",
   "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui-standalone-preset.js"
 ];
 
-// Halaman dokumentasi interaktif tersedia di /api-docs
-app.use(
-  "/api-docs",
-  swaggerUi.serve,
-  swaggerUi.setup(swaggerSpec, {
-    customCssUrl: CSS_URL,
-    customJs: JS_URL,
-  })
-);
+// Opsi konfigurasi Swagger dengan tambahan pengaturan posisi server & authorize
+const swaggerOptions = {
+  customCssUrl: CSS_URL,
+  customJs: JS_URL,
+  customCss: `
+    .swagger-ui .information-container {
+      display: flex !important;
+      flex-direction: row !important;
+      flex-wrap: wrap !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+    }
+    .swagger-ui .information-container .info {
+      flex: 0 0 100% !important;
+      margin-bottom: 15px !important;
+    }
+    /* Mengatur kontainer server agar pindah ke kiri dan sejajar dengan authorize */
+    .swagger-ui .scheme-container {
+      display: flex !important;
+      justify-content: space-between !important;
+      align-items: center !important;
+      background: transparent !important;
+      padding: 15px 0 !important;
+      box-shadow: none !important;
+    }
+    .swagger-ui .information-container .servers {
+      margin: 0 !important;
+    }
+    .swagger-ui .auth-wrapper {
+      margin: 0 !important;
+    }
+  `,
+  customSiteTitle: "Todo List API - Documentation",
+};
+
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, swaggerOptions));
 
 app.use("/api/auth", authRoutes);
 app.use("/api/todos", todoRoutes);
