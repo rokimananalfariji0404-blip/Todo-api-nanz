@@ -1,27 +1,34 @@
 const todoService = require("../services/todo.service");
 const ActivityLog = require("../models/activityLog.model");
+const Category = require("../models/category.model"); // Ditambahkan untuk validasi kategori
 const AppError = require("../utils/AppError");
 const catchAsync = require("../utils/catchAsync");
 
 const createTodo = catchAsync(async (req, res, next) => {
-  // 1. Ambil 'category' juga dari req.body
   const { title, description, category } = req.body;
+
+  // REVISI: Validasi apakah ID kategori dikirim dan ada di database
+  if (category) {
+    const categoryExists = await Category.findById(category);
+    if (!categoryExists) {
+      return next(new AppError("Kategori tidak ditemukan atau tidak valid", 404)); // atau status 400
+    }
+  }
 
   const todo = await todoService.createTodo({
     title,
     description,
-    category, // Menyimpan kategori saat create
+    category,
     owner: req.user._id,
     created_by: req.user._id,
     updated_by: req.user._id,
   });
 
-  // 2. Tambahkan snapshot pada activity log sesuai instruksi
   await ActivityLog.create({
     action: "CREATE_TODO",
     todo_id: todo._id,
-    user: req.user._id, // Diubah dari user_id ke user
-    description: `Membuat todo: "${todo.title}"`, // Menambahkan deskripsi wajib log
+    user: req.user._id,
+    description: `Membuat todo: "${todo.title}"`,
     snapshot: {
       title: todo.title,
       description: todo.description,
@@ -97,7 +104,6 @@ const getTodoById = catchAsync(async (req, res, next) => {
 
 const updateTodo = catchAsync(async (req, res, next) => {
   const { id } = req.params;
-  // 1. Ambil 'category' juga dari req.body saat update
   const { title, description, completed, archived, category } = req.body;
 
   const existingTodo = await todoService.getTodoById(id);
@@ -112,21 +118,28 @@ const updateTodo = catchAsync(async (req, res, next) => {
     return next(new AppError("You do not have permission to update this todo", 403));
   }
 
+  // REVISI: Validasi apakah ID kategori baru yang dikirim valid/ada di database
+  if (category) {
+    const categoryExists = await Category.findById(category);
+    if (!categoryExists) {
+      return next(new AppError("Kategori tidak ditemukan atau tidak valid", 404)); // atau status 400
+    }
+  }
+
   const updatedTodo = await todoService.updateTodo(id, {
     title,
     description,
     completed,
     archived,
-    category, // Mengirim data category ke service update
+    category,
     updated_by: req.user._id,
   });
 
-  // 2. Sertakan snapshot pada log update
   await ActivityLog.create({
     action: "UPDATE_TODO",
     todo_id: id,
-    user: req.user._id, // Diubah dari user_id ke user
-    description: `Mengubah todo: "${updatedTodo.title}"`, // Menambahkan deskripsi wajib log
+    user: req.user._id,
+    description: `Mengubah todo: "${updatedTodo.title}"`,
     snapshot: {
       title: updatedTodo.title,
       description: updatedTodo.description,
@@ -160,12 +173,11 @@ const deleteTodo = catchAsync(async (req, res, next) => {
 
   await todoService.deleteTodo(id);
 
-  // 3. Sertakan snapshot pada log delete (sangat berguna agar data tetap ada walau todo dihapus)
   await ActivityLog.create({
     action: "DELETE_TODO",
     todo_id: id,
-    user: req.user._id, // Diubah dari user_id ke user
-    description: `Menghapus todo: "${existingTodo.title}"`, // Menambahkan deskripsi wajib log
+    user: req.user._id,
+    description: `Menghapus todo: "${existingTodo.title}"`,
     snapshot: {
       title: existingTodo.title,
       description: existingTodo.description,

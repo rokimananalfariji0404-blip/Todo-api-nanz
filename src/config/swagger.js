@@ -9,6 +9,29 @@ const options = {
       version: "1.0.0",
       description: "Dokumentasi API Todo List — dibangun bertahap dari seri artikel backend Node.js",
     },
+    // Menambahkan pengaturan urutan tags (tata letak menu di Swagger UI)
+    tags: [
+      {
+        name: "Auth",
+        description: "Endpoint untuk autentikasi pengguna",
+      },
+      {
+        name: "Categories",
+        description: "Endpoint untuk manajemen kategori",
+      },
+      {
+        name: "Stats",
+        description: "Endpoint untuk statistik sistem",
+      },
+      {
+        name: "Activity Logs",
+        description: "Endpoint untuk log aktivitas",
+      },
+      {
+        name: "Todos",
+        description: "Endpoint untuk manajemen todo",
+      },
+    ],
     servers: [
       {
         url: "/",
@@ -61,8 +84,7 @@ const options = {
       },
     },
   },
-  // Mengarahkan langsung ke file-file rute di dalam folder src/routes/
- apis: [
+  apis: [
     path.join(process.cwd(), "src/routes/todo.routes.js"),
     path.join(process.cwd(), "src/routes/auth.routes.js"),
     path.join(process.cwd(), "src/routes/category.routes.js"),

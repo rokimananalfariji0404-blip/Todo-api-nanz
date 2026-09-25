@@ -15,11 +15,11 @@ const todoSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    // PENAMBAHAN 1: Field category untuk relasi ke model Category
+    // Diubah menjadi required: true agar sesuai dengan instruksi revisi database
     category: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Category",
-      required: false, // Ubah ke true jika kategori wajib diisi
+      required: [true, "Kategori harus diisi"],
     },
     owner: {
       type: mongoose.Schema.Types.ObjectId,
@@ -34,7 +34,7 @@ const todoSchema = new mongoose.Schema(
     updated_by: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true, // PENAMBAHAN 2: Diubah jadi required agar langsung terisi saat create
+      required: true,
     },
     archived: {
       type: Boolean,
